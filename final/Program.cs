@@ -1,5 +1,6 @@
 using final.Entities;
 using final.Infrastructure.Data;
+using final.Infrastructure.Hubs;
 using final.Infrastructure.Services;
 using final.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -7,6 +8,8 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using PaymentSystem.Infrastructure.Interfaces;
+using PaymentSystem.Infrastructure.Services;
 using Serilog;
 using System.Text;
 
@@ -34,14 +37,12 @@ builder.Services.AddSwaggerGen(c =>
         Version = "v1"
     });
 
-    // 🔥 JWT Authentication in Swagger (FIXED)
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         Name = "Authorization",
         Type = SecuritySchemeType.Http,
         Scheme = "bearer",
         BearerFormat = "JWT",
-        In = ParameterLocation.Header,
         Description = "Enter token like this: Bearer {your_token}"
     });
 
@@ -95,6 +96,8 @@ builder.Services.AddAuthentication(options =>
     options.RequireHttpsMetadata = false;
     options.SaveToken = true;
 
+    options.MapInboundClaims = false;
+
     options.TokenValidationParameters = new TokenValidationParameters
     {
         ValidateIssuerSigningKey = true,
@@ -107,7 +110,20 @@ builder.Services.AddAuthentication(options =>
         ValidAudience = builder.Configuration["Jwt:Audience"] ?? "InstaPayCloneClient",
 
         ValidateLifetime = true,
-        ClockSkew = TimeSpan.Zero
+        ClockSkew = TimeSpan.FromMinutes(5)
+    };
+    options.Events = new JwtBearerEvents
+    {
+        OnMessageReceived = context =>
+        {
+            var accessToken = context.Request.Query["access_token"];
+            var path = context.HttpContext.Request.Path;
+
+            if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs"))
+                context.Token = accessToken;
+
+            return Task.CompletedTask;
+        }
     };
 });
 #endregion
@@ -125,11 +141,14 @@ builder.Services.AddAuthorization(options =>
 #region DI
 builder.Services.AddScoped<IFingerprintService, FingerprintService>();
 builder.Services.AddScoped<ITransactionService, TransactionService>();
+builder.Services.AddScoped<INotificationService, NotificationService>();
+builder.Services.AddSignalR();
+builder.Services.AddScoped<IVisaService, VisaService>();
 #endregion
 
 var app = builder.Build();
 
-#region Seed Roles
+#region Seed Roles + Visa Data
 using (var scope = app.Services.CreateScope())
 {
     var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
@@ -143,6 +162,10 @@ using (var scope = app.Services.CreateScope())
             await roleManager.CreateAsync(new IdentityRole(role));
         }
     }
+
+    var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    await db.Database.MigrateAsync();
+    await VisaSeedData.SeedAsync(db);
 }
 #endregion
 
@@ -155,10 +178,11 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-app.UseAuthentication();   // 🔥 مهم جداً قبل Authorization
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+app.MapHub<NotificationHub>("/hubs/notifications");
 #endregion
 
 app.Run();

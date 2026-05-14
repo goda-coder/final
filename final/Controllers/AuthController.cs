@@ -1,14 +1,15 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using final.Application.DTOs;
-using final.Entities;
+﻿using final.Entities;
 using final.Enums;
-
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+
+// ✅ الحل: alias للـ DTOs بتاعتنا
+using AppDTOs = final.Application.DTOs;
 
 namespace final.Controllers
 {
@@ -30,9 +31,8 @@ namespace final.Controllers
             _configuration = configuration;
         }
 
-        // ================= REGISTER =================
         [HttpPost("register")]
-        public async Task<IActionResult> Register([FromBody] RegisterRequest request)
+        public async Task<IActionResult> Register([FromBody] AppDTOs.RegisterRequest request)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
@@ -44,11 +44,10 @@ namespace final.Controllers
                 FullName = request.FullName,
                 PhoneNumber = request.PhoneNumber,
                 NationalId = request.NationalId,
-
+                Role = request.Role,
                 MerchantName = request.MerchantName,
                 CommercialRegistration = request.CommercialRegistration,
                 TaxNumber = request.TaxNumber,
-
                 MerchantStatus = request.Role == UserRole.Merchant
                     ? MerchantStatus.Pending
                     : null
@@ -59,7 +58,6 @@ namespace final.Controllers
             if (!result.Succeeded)
                 return BadRequest(result.Errors);
 
-            // 🔥 Identity Role only (IMPORTANT)
             await _userManager.AddToRoleAsync(user, request.Role.ToString());
 
             return Ok(new
@@ -69,11 +67,11 @@ namespace final.Controllers
             });
         }
 
-        // ================= LOGIN =================
         [HttpPost("login")]
-        public async Task<IActionResult> Login([FromBody] LoginRequest request)
+        public async Task<IActionResult> Login([FromBody] AppDTOs.LoginRequest request)
         {
-            var user = await _userManager.FindByEmailAsync(request.Email);
+            var user = await _userManager.Users
+                .FirstOrDefaultAsync(x => x.PhoneNumber == request.PhoneNumber);
 
             if (user == null || !user.IsActive)
                 return Unauthorized(new { Message = "Invalid credentials" });
@@ -84,28 +82,23 @@ namespace final.Controllers
                 return Unauthorized(new { Message = "Invalid credentials" });
 
             var token = await GenerateJwtToken(user);
-
             return Ok(token);
         }
 
-        // ================= JWT GENERATION (FIXED) =================
-        private async Task<AuthResponse> GenerateJwtToken(ApplicationUser user)
+        private async Task<AppDTOs.AuthResponse> GenerateJwtToken(ApplicationUser user)
         {
             var roles = await _userManager.GetRolesAsync(user);
 
             var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier, user.Id),
-                new Claim(ClaimTypes.Email, user.Email!),
+                new Claim(ClaimTypes.Email, user.Email ?? ""),
                 new Claim(ClaimTypes.Name, user.FullName ?? ""),
                 new Claim("PhoneNumber", user.PhoneNumber ?? "")
             };
 
-            // 🔥 ONLY Identity Roles (IMPORTANT FIX)
             foreach (var role in roles)
-            {
                 claims.Add(new Claim(ClaimTypes.Role, role));
-            }
 
             var key = new SymmetricSecurityKey(
                 Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]!)
@@ -125,13 +118,13 @@ namespace final.Controllers
                 signingCredentials: creds
             );
 
-            return new AuthResponse
+            return new AppDTOs.AuthResponse
             {
                 Token = new JwtSecurityTokenHandler().WriteToken(token),
                 ExpiresAt = expires,
-                Email = user.Email!,
-                FullName = user.FullName,
-                Role = Enum.Parse<UserRole>(roles.FirstOrDefault()!) // optional display only
+                Email = user.Email ?? "",
+                FullName = user.FullName ?? "",
+                Role = Enum.Parse<UserRole>(roles.FirstOrDefault() ?? "User")
             };
         }
     }

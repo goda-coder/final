@@ -1,16 +1,8 @@
-﻿
-
-
-using final.Enums;
-
+﻿using final.Enums;
 using Microsoft.AspNetCore.Identity;
-using System.Transactions;
+
 namespace final.Entities
 {
-    
-
-    
-
     public class ApplicationUser : IdentityUser
     {
         public string FullName { get; set; } = string.Empty;
@@ -22,22 +14,21 @@ namespace final.Entities
         public bool IsActive { get; set; } = true;
         public decimal Balance { get; set; } = 0;
 
-        // للتجار فقط
+        // Profile
+        public string? Address { get; set; }
+        public string? Occupation { get; set; }
+        public Gender? Gender { get; set; }
+        public DateTime? DateOfBirth { get; set; }
+
+        // Merchant
         public string? MerchantName { get; set; }
         public string? CommercialRegistration { get; set; }
         public string? TaxNumber { get; set; }
         public MerchantStatus? MerchantStatus { get; set; }
 
-        public virtual ICollection<Transaction> SentTransactions { get; set; } = new List<Transaction>();
-        public virtual ICollection<Transaction> ReceivedTransactions { get; set; } = new List<Transaction>();
-        public virtual ICollection<FingerprintLog> FingerprintLogs { get; set; } = new List<FingerprintLog>();
-    }
-
-    public enum MerchantStatus
-    {
-        Pending,
-        Approved,
-        Rejected,
-        Suspended
+        // Navigation Properties
+        public ICollection<Transaction> SentTransactions { get; set; } = new List<Transaction>();
+        public ICollection<Transaction> ReceivedTransactions { get; set; } = new List<Transaction>();
+        public ICollection<FingerprintLog> FingerprintLogs { get; set; } = new List<FingerprintLog>();
     }
 }
