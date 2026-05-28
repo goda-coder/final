@@ -19,7 +19,9 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<VisaCard> VisaCards { get; set; } = null!;
     public DbSet<BankAccount> BankAccounts { get; set; } = null!;
     public DbSet<BankToken> BankTokens { get; set; } = null!;
-
+    //public DbSet<Report> Reports { get; set; } = null!;
+    public DbSet<Dispute> Disputes { get; set; } = null!;
+    public DbSet<TrustedContact> TrustedContacts { get; set; } = null!;
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);

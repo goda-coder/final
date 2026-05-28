@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using final.Infrastructure.Data;
 
@@ -11,9 +12,11 @@ using final.Infrastructure.Data;
 namespace final.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260525180916_AddDisputeModule")]
+    partial class AddDisputeModule
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -557,48 +560,6 @@ namespace final.Migrations
                     b.HasIndex("SenderId");
 
                     b.ToTable("Transactions");
-                });
-
-            modelBuilder.Entity("final.Entities.TrustedContact", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<decimal>("DailyLimit")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<string>("NickName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<decimal>("TotalLimit")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<string>("TrustedPhone")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("TrustedUserId")
-                        .HasColumnType("int");
-
-                    b.Property<decimal>("UsedToday")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<decimal>("UsedTotal")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("TrustedContacts");
                 });
 
             modelBuilder.Entity("final.Entities.VisaCard", b =>

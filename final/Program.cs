@@ -1,3 +1,4 @@
+using final.Application.Interfaces;
 using final.Entities;
 using final.Infrastructure.Data;
 using final.Infrastructure.Hubs;
@@ -144,6 +145,9 @@ builder.Services.AddScoped<ITransactionService, TransactionService>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddSignalR();
 builder.Services.AddScoped<IVisaService, VisaService>();
+builder.Services.AddScoped<IReportService, ReportService>();
+builder.Services.AddScoped<IDisputeService, DisputeService>();
+builder.Services.AddScoped<ITrustedContactService, TrustedContactService>();
 #endregion
 
 var app = builder.Build();
