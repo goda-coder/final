@@ -40,7 +40,8 @@ namespace final.Controllers
                 Address = user.Address,
                 Occupation = user.Occupation,
                 Gender = user.Gender,
-                DateOfBirth = user.DateOfBirth
+                DateOfBirth = user.DateOfBirth,
+                Role = user.Role
             };
 
             return Ok(profile);
@@ -81,7 +82,6 @@ namespace final.Controllers
                     return BadRequest(new { Message = "Email already in use" });
 
                 user.Email = request.Email;
-                user.UserName = request.Email;
             }
 
             // ✅ تحديث البيانات

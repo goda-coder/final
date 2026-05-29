@@ -12,6 +12,7 @@ namespace final.Application.DTOs
         public string? Occupation { get; set; }
         public Gender? Gender { get; set; }
         public DateTime? DateOfBirth { get; set; }
+        public UserRole Role { get; set; }
     }
 
     public class UpdateProfileDto

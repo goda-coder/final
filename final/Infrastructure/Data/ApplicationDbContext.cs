@@ -95,5 +95,10 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
         builder.Entity<BankToken>()
             .HasIndex(t => t.Token)
             .IsUnique();
+
+        builder.Entity<ApplicationUser>()
+            .HasIndex(u => u.Email)
+            .IsUnique()
+            .HasFilter("[Email] IS NOT NULL");
     }
 }

@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using final.Infrastructure.Data;
 
@@ -11,9 +12,11 @@ using final.Infrastructure.Data;
 namespace final.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260516175447_MakeEmailOptional")]
+    partial class MakeEmailOptional
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -272,6 +275,9 @@ namespace final.Migrations
                     b.Property<int?>("MerchantStatus")
                         .HasColumnType("int");
 
+                    b.Property<string>("NationalId")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("NormalizedEmail")
                         .HasMaxLength(256)
                         .HasColumnType("nvarchar(256)");
@@ -291,12 +297,6 @@ namespace final.Migrations
 
                     b.Property<bool>("PhoneNumberConfirmed")
                         .HasColumnType("bit");
-
-                    b.Property<string>("RefreshToken")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime?>("RefreshTokenExpiryTime")
-                        .HasColumnType("datetime2");
 
                     b.Property<int>("Role")
                         .HasColumnType("int");
@@ -435,52 +435,6 @@ namespace final.Migrations
                     b.ToTable("BankTokens");
                 });
 
-            modelBuilder.Entity("final.Entities.Dispute", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("AdminNote")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Reason")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("RefundIssued")
-                        .HasColumnType("bit");
-
-                    b.Property<DateTime?>("ResolvedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("ReviewedByAdminId")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<int>("Status")
-                        .HasColumnType("int");
-
-                    b.Property<Guid>("TransactionId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("UserId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ReviewedByAdminId");
-
-                    b.HasIndex("TransactionId");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("Disputes");
-                });
-
             modelBuilder.Entity("final.Entities.FingerprintLog", b =>
                 {
                     b.Property<Guid>("Id")
@@ -564,48 +518,6 @@ namespace final.Migrations
                     b.HasIndex("SenderId");
 
                     b.ToTable("Transactions");
-                });
-
-            modelBuilder.Entity("final.Entities.TrustedContact", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<decimal>("DailyLimit")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<string>("NickName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<decimal>("TotalLimit")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<string>("TrustedPhone")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("TrustedUserId")
-                        .HasColumnType("int");
-
-                    b.Property<decimal>("UsedToday")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<decimal>("UsedTotal")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("TrustedContacts");
                 });
 
             modelBuilder.Entity("final.Entities.VisaCard", b =>
@@ -722,31 +634,6 @@ namespace final.Migrations
                         .IsRequired();
 
                     b.Navigation("BankAccount");
-
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("final.Entities.Dispute", b =>
-                {
-                    b.HasOne("final.Entities.ApplicationUser", "ReviewedByAdmin")
-                        .WithMany()
-                        .HasForeignKey("ReviewedByAdminId");
-
-                    b.HasOne("final.Entities.Transaction", "Transaction")
-                        .WithMany()
-                        .HasForeignKey("TransactionId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("final.Entities.ApplicationUser", "User")
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("ReviewedByAdmin");
-
-                    b.Navigation("Transaction");
 
                     b.Navigation("User");
                 });

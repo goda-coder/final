@@ -1,86 +1,55 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using System.Security.Claims;
 using final.Entities;
-using final.Infrastructure.Data;
-
 using final.Enums;
-
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
+using AppDTOs = final.Application.DTOs;
 
-using Microsoft.EntityFrameworkCore;
 namespace final.Controllers
 {
-   
-
-    
-
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize(Roles = "Merchant")]
+    [Authorize]
     public class MerchantController : ControllerBase
     {
         private readonly UserManager<ApplicationUser> _userManager;
-        private readonly ApplicationDbContext _context;
 
-        public MerchantController(UserManager<ApplicationUser> userManager, ApplicationDbContext context)
+        public MerchantController(UserManager<ApplicationUser> userManager)
         {
             _userManager = userManager;
-            _context = context;
         }
 
-        [HttpGet("profile")]
-        public async Task<IActionResult> GetProfile()
+        [HttpPost("setup")]
+        public async Task<IActionResult> Setup([FromBody] AppDTOs.MerchantSetupRequest request)
         {
-            var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-            var merchant = await _userManager.FindByIdAsync(userId!);
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
 
-            return Ok(new
-            {
-                merchant!.MerchantName,
-                merchant.CommercialRegistration,
-                merchant.TaxNumber,
-                merchant.MerchantStatus,
-                merchant.Balance,
-                merchant.PhoneNumber
-            });
-        }
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (userId == null)
+                return Unauthorized();
 
-        [HttpGet("transactions")]
-        public async Task<IActionResult> GetMerchantTransactions()
-        {
-            var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-            var transactions = await _context.Transactions
-                .Where(t => t.ReceiverId == userId && t.Type == TransactionType.MerchantPayment)
-                .Include(t => t.Sender)
-                .OrderByDescending(t => t.CreatedAt)
-                .ToListAsync();
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null || !user.IsActive)
+                return NotFound(new { Message = "User not found" });
 
-            return Ok(transactions.Select(t => new
-            {
-                t.Id,
-                t.Amount,
-                CustomerName = t.Sender?.FullName,
-                t.CreatedAt,
-                t.Status
-            }));
-        }
+            var isMerchant = await _userManager.IsInRoleAsync(user, "Merchant");
+            if (!isMerchant)
+                return Forbid();
 
-        [HttpGet("qr-code")]
-        public async Task<IActionResult> GetQrCodeData()
-        {
-            var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-            var merchant = await _userManager.FindByIdAsync(userId!);
+            user.MerchantName = request.MerchantName;
+            user.CommercialRegistration = request.CommercialRegistration;
+            user.TaxNumber = request.TaxNumber;
 
-            // بيانات الـ QR Code اللي العميل هيscanها
-            var qrData = new
-            {
-                MerchantId = merchant!.Id,
-                MerchantName = merchant.MerchantName,
-                MerchantPhone = merchant.PhoneNumber
-            };
+            if (user.MerchantStatus == MerchantStatus.Pending || user.MerchantStatus == null)
+                user.MerchantStatus = MerchantStatus.Pending;
 
-            return Ok(qrData);
+            var result = await _userManager.UpdateAsync(user);
+            if (!result.Succeeded)
+                return BadRequest(result.Errors);
+
+            return Ok(new { Message = "Merchant profile updated successfully" });
         }
     }
 }

@@ -3,15 +3,12 @@ using final.Enums;
 
 namespace final.Application.DTOs
 {
-    // ✅ أضفنا RegisterRequest
     public class RegisterRequest
     {
         [Required]
         public string FullName { get; set; } = string.Empty;
 
-        [Required]
-        [EmailAddress]
-        public string Email { get; set; } = string.Empty;
+        public string? Email { get; set; }
 
         [Required]
         [Phone]
@@ -19,15 +16,6 @@ namespace final.Application.DTOs
 
         [Required]
         public string Password { get; set; } = string.Empty;
-
-        public string? NationalId { get; set; }
-
-        public UserRole Role { get; set; } = UserRole.User;
-
-        // Merchant fields (اختيارية)
-        public string? MerchantName { get; set; }
-        public string? CommercialRegistration { get; set; }
-        public string? TaxNumber { get; set; }
     }
 
     public class LoginRequest
@@ -43,12 +31,37 @@ namespace final.Application.DTOs
     public class AuthResponse
     {
         public string Token { get; set; } = string.Empty;
-        public string RefreshToken { get; set; } = string.Empty;
         public DateTime ExpiresAt { get; set; }
+        public string RefreshToken { get; set; } = string.Empty;
+        public DateTime RefreshTokenExpiresAt { get; set; }
         public string? Email { get; set; }
         public string PhoneNumber { get; set; } = string.Empty;
         public string FullName { get; set; } = string.Empty;
         public UserRole Role { get; set; }
+    }
+
+    public class SetRoleRequest
+    {
+        [Required]
+        public UserRole Role { get; set; }
+    }
+
+    public class RefreshTokenRequest
+    {
+        [Required]
+        public string RefreshToken { get; set; } = string.Empty;
+    }
+
+    public class MerchantSetupRequest
+    {
+        [Required]
+        public string MerchantName { get; set; } = string.Empty;
+
+        [Required]
+        public string CommercialRegistration { get; set; } = string.Empty;
+
+        [Required]
+        public string TaxNumber { get; set; } = string.Empty;
     }
 
     public class FingerprintPaymentRequest

@@ -1,7 +1,11 @@
-﻿namespace final.Enums
+﻿using System.Text.Json.Serialization;
+
+namespace final.Enums
 {
+    [JsonConverter(typeof(JsonStringEnumConverter))]
     public enum UserRole
     {
+        None,
         User,
         Merchant,
         Admin

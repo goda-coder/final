@@ -6,8 +6,7 @@ namespace final.Entities
     public class ApplicationUser : IdentityUser
     {
         public string FullName { get; set; } = string.Empty;
-        public string? NationalId { get; set; }
-        public UserRole Role { get; set; } = UserRole.User;
+        public UserRole Role { get; set; } = UserRole.None;
         public bool IsFingerprintEnabled { get; set; } = false;
         public string? FingerprintTemplate { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
@@ -25,6 +24,10 @@ namespace final.Entities
         public string? CommercialRegistration { get; set; }
         public string? TaxNumber { get; set; }
         public MerchantStatus? MerchantStatus { get; set; }
+
+        // Refresh Token
+        public string? RefreshToken { get; set; }
+        public DateTime? RefreshTokenExpiryTime { get; set; }
 
         // Navigation Properties
         public ICollection<Transaction> SentTransactions { get; set; } = new List<Transaction>();
